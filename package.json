@@ -4,12 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "npm run dev:server",
     "start": "node ./src/server.js",
-    "dev:server": "react-scripts start",
-    "build": "react-scripts build",
-    "deploy": "vercel --prod",
-    "dev:both": "concurrently \"npm run dev:server\" \"npm start\""
+    "build:frontend": "react-scripts build",
+    "build": "npm run build:frontend && npm run start",
+    "deploy": "vercel --prod"
   },
   "keywords": [],
   "author": "",
