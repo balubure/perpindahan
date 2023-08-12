@@ -15,10 +15,27 @@ const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_u
 
 
 const SCOPE = ['https://www.googleapis.com/auth/drive.metadata.readonly https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.photos.readonly https://www.googleapis.com/auth/drive']
+const corsOptions = {
+  //origin: 'https://3000-balubure-perpindahan-e0ujd327edc.ws-us102.gitpod.io' // Ganti dengan URL ReactJS Anda
+ // origin: 'http://localhost:3000'
+ origin: '*',
+};
 
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+
+app.use((req, res, next) => {
+  //res.header('Access-Control-Allow-Origin', '*'); // Set to specific origin or '*' for any
+  res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+  res.header('Access-Control-Allow-Headers: ', 'Content-Type'); 
+ // res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  //res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+ // res.header('Access-Control-Allow-Credentials', true); // If you need to include credentials
+  next();
+});
+
 
 app.get('/', (req, res) => res.send(' API Running'));
 
@@ -480,6 +497,74 @@ app.post('/downloadVehicle/:id', (req, res) => {
 });
 
 
+app.post('/downloadVee/:id', (req, res) => {
+
+  const dataFromClient = req.body;
+  //const jsonObject = JSON.parse(dataFromClient.rawJsonText);
+
+  oAuth2Client.setCredentials(dataFromClient.token);
+
+
+    if (jsonObject.token == null) return res.status(400).send('Token not found');
+    
+
+    //oAuth2Client.setCredentials(jsonObject.token);
+
+    const drive = google.drive({ version: 'v3', auth: oAuth2Client });
+    const fileId = req.params.id;
+    const namaFileGlb =  dataFromClient.data;
+ 
+
+
+        drive.files.get(
+          { fileId: fileId, alt: 'media' },
+          { responseType: 'stream' },
+          (err, response) => {
+            if (err) {
+              console.error('Error while downloading file:', err);
+              return res.status(500).send('Error while downloading file');
+            }
+        
+         
+          const dest = fs.createWriteStream(`./public/rumahe/${namaFileGlb}`);
+            response.data
+
+             /*
+              .on('end', () => {
+                console.log('File sudah berhasil diunduh.');
+                res.status(200).send('File berhasil diunduh');
+              })
+              .on('error', (err) => {
+                console.error('Error while downloading file:', err);
+                fs.unlinkSync(`./public/rumahe/${namaFileGlb}`); // Hapus file yang tidak lengkap jika terjadi error
+                res.status(500).send('Error while downloading file');
+              })
+              .pipe(dest);
+              //.pipe(res);
+              */
+
+
+              .on('data', (chunk) => {
+                chunks.push(chunk);
+              })
+              .on('end', () => {
+                const fileBuffer = Buffer.concat(chunks);
+                res.setHeader('Content-disposition', `attachment; filename=${namaFileGlb}`);
+                res.setHeader('Content-type', 'application/octet-stream');
+                res.send(fileBuffer);
+              })
+              .on('error', (err) => {
+                console.error('Error while downloading file:', err);
+                fs.unlinkSync(`./public/vehicle/${namaFileGlb}`);
+                res.status(500).send('Error while downloading file');
+              });
+
+          }
+        );
+        
+       
+});
+
 /*
 app.post('/download/:id', (req, res) => {
   if (req.body.token == null) return res.status(400).send('Token not found');
@@ -685,5 +770,5 @@ app.post('/download/:id', (req, res) => {
   });
 */
 
-const PORT = process.env.PORT || 6522;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server Started ${PORT}`));

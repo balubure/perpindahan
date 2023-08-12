@@ -6,17 +6,9 @@ import { KeyboardControls } from '@react-three/drei'
 
 
 
-
 const root = ReactDOM.createRoot(document.querySelector('#root'))
 
-/*
-function getAwake(){
-console.log('adaaaa')
 
-}
-
-getAwake()
-*/
 
 
 root.render(
